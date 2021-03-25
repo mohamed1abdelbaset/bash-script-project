@@ -1,0 +1,106 @@
+#!/bin/bash
+
+	
+select choice1 in "Create Database" "List Databases" "Connect To Databases" "Drop Database"; do
+	case $choice1 in	
+		"Create Database")
+			read -p "Enter Name of Database to Create it : " db_name
+			db_name=${db_name}.db
+			if [ -d $db_name ]; then
+				echo "$db_name Database is already exist"
+			else
+				mkdir $db_name
+			fi
+			;;
+		"List Databases")
+			ls *.db
+			;;
+		"Connect To Databases")
+			read -p "Enter Name of Database : " db_name
+			db_name=${db_name}.db
+			if [ -d $db_name ]; then
+				cd $db_name	
+				select choice2 in "Create Table" "List Tables" "Drop Table" "Insert into Table" "Select From Table" "Delete From Table"; do
+					case $choice2 in
+						"Create Table")
+							read -p "Enter Table Name to Create it : " t_name
+							read -p "Enter Columns separator by spaces : " col_arr
+							if [ -e $t_name ]; then
+								echo "Table is already existed"
+							else
+								touch $t_name
+								pk_placeholder="PK_Placeholder"
+								printf ${pk_placeholder} >> $t_name
+								for col in  $col_arr; do
+									printf ,${col} >> $t_name
+								done
+								printf '\n' >> $t_name
+							fi
+							;;
+						"List Tables")
+							ls
+							;;
+						"Drop Table")
+							read -p "Enter Table Name to Drop it : " t_name
+							if [ -e $t_name ]; then
+								rm $t_name
+							else
+								echo "$t_name Table is Not found in Database."
+							fi
+							;;
+						"Insert into Table")
+							read -p "Enter Table Name : " t_name
+							if [ -e $t_name ]; then
+								read -p "Enter your record Separated with comma : " record
+								printf `awk "END{print NR}" $t_name` >> $t_name	
+								echo ,${record} >> $t_name
+							else
+								echo "$t_name Table is not found"
+							fi
+							;;
+						"Select From Table")
+							read -p "Enter Table Name: " t_name
+							if [ -e $t_name ]; then
+								read -p "Write 'number' to print a record or 'range' to print a range of records or 'all' to print all records : " select_type
+								case $select_type in
+									'number')
+										read -p "Enter the record number to print it : " record_number
+										let record_number=$record_number+1
+										sed -n "${record_number}p" $t_name
+										;;
+									'range')
+										read -p "Enter two numbers separated by space : " record_from record_to
+										let record_from=$record_from+1
+										let record_to=$record_to+1
+										sed -n "${record_from},${record_to}p" $t_name
+										;;
+									'all')
+										cat $t_name
+										;;
+								esac
+							else
+								echo "$t_name Table is not found"
+							fi
+							;;
+						"Delete From Table")
+							read -p "Enter the line number to delete it : " delete_number
+							let delete_number=$delete_number+1
+							sed -n "${delete_number}d" $t_name
+							;;
+					esac
+				done
+			else
+				echo "$db_name Database is not found"
+			fi
+			;;
+		"Drop Database")
+			read -p "Enter Name of Database to Drop it : " db_name
+			db_name=${db_name}.db
+			if [ -d $db_name ]; then
+				rm -r "$db_name"
+			else
+				echo "$db_name Database is not existed"
+			fi	
+			;;
+	esac
+done
